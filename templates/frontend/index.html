@@ -1,0 +1,698 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Сервис автоматизации закупок</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    body { background: #f4f6fb; }
+    .navbar-brand { font-weight: 700; letter-spacing: 1px; }
+    .section { display: none; }
+    .section.active { display: block; }
+    .card { border: none; box-shadow: 0 2px 12px rgba(0,0,0,0.07); margin-bottom: 16px; }
+    .product-card .badge { font-size: 0.8rem; }
+    .toast-container { position: fixed; top: 70px; right: 20px; z-index: 9999; }
+    #basket-badge { font-size: 0.7rem; }
+    .order-status { font-size: 0.8rem; padding: 3px 8px; border-radius: 12px; }
+    .status-basket   { background:#e9ecef; color:#495057; }
+    .status-new      { background:#cfe2ff; color:#084298; }
+    .status-confirmed{ background:#d1e7dd; color:#0f5132; }
+    .status-assembled{ background:#fff3cd; color:#856404; }
+    .status-sent     { background:#d0d3ff; color:#20235b; }
+    .status-delivered{ background:#c3e6cb; color:#155724; }
+    .status-canceled { background:#f8d7da; color:#842029; }
+  </style>
+</head>
+<body>
+
+<!-- Навигация -->
+<nav class="navbar navbar-expand-lg navbar-dark bg-primary sticky-top">
+  <div class="container">
+    <span class="navbar-brand">🛒 ЗакупкиПро</span>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navMenu">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navMenu">
+      <ul class="navbar-nav me-auto" id="nav-auth-links">
+        <li class="nav-item"><a class="nav-link" href="#" onclick="showSection('catalog')">Каталог</a></li>
+        <li class="nav-item"><a class="nav-link" href="#" onclick="showSection('basket')">
+          Корзина <span class="badge bg-warning text-dark" id="basket-badge" style="display:none">0</span>
+        </a></li>
+        <li class="nav-item"><a class="nav-link" href="#" onclick="showSection('orders')">Мои заказы</a></li>
+        <li class="nav-item"><a class="nav-link" href="#" onclick="showSection('contacts')">Контакты</a></li>
+      </ul>
+      <ul class="navbar-nav ms-auto">
+        <li class="nav-item" id="nav-user-info" style="display:none">
+          <span class="navbar-text text-white me-3" id="nav-username"></span>
+        </li>
+        <li class="nav-item" id="nav-logout-btn" style="display:none">
+          <a class="nav-link" href="#" onclick="logout()">Выйти</a>
+        </li>
+        <li class="nav-item" id="nav-login-btn">
+          <a class="nav-link" href="#" onclick="showSection('auth')">Войти</a>
+        </li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<!-- Уведомления -->
+<div class="toast-container" id="toast-container"></div>
+
+<div class="container py-4">
+
+  <!-- ===== СЕКЦИЯ: АВТОРИЗАЦИЯ ===== -->
+  <div class="section active" id="section-auth">
+    <div class="row justify-content-center">
+      <div class="col-md-5">
+        <ul class="nav nav-tabs mb-3" id="authTabs">
+          <li class="nav-item">
+            <a class="nav-link active" href="#" onclick="switchAuthTab('login')">Вход</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="#" onclick="switchAuthTab('register')">Регистрация</a>
+          </li>
+          <li class="nav-item" id="tab-confirm-link" style="display:none">
+            <a class="nav-link" href="#" onclick="switchAuthTab('confirm')">Подтверждение</a>
+          </li>
+        </ul>
+
+        <!-- Вход -->
+        <div id="auth-login">
+          <div class="card p-4">
+            <h5 class="mb-3">Вход в систему</h5>
+            <div class="mb-3">
+              <label class="form-label">Email</label>
+              <input type="email" class="form-control" id="login-email" placeholder="user@example.com">
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Пароль</label>
+              <input type="password" class="form-control" id="login-password">
+            </div>
+            <button class="btn btn-primary w-100" onclick="doLogin()">Войти</button>
+          </div>
+        </div>
+
+        <!-- Регистрация -->
+        <div id="auth-register" style="display:none">
+          <div class="card p-4">
+            <h5 class="mb-3">Регистрация</h5>
+            <div class="row g-2 mb-2">
+              <div class="col">
+                <label class="form-label">Имя</label>
+                <input type="text" class="form-control" id="reg-firstname">
+              </div>
+              <div class="col">
+                <label class="form-label">Фамилия</label>
+                <input type="text" class="form-control" id="reg-lastname">
+              </div>
+            </div>
+            <div class="mb-2">
+              <label class="form-label">Email</label>
+              <input type="email" class="form-control" id="reg-email">
+            </div>
+            <div class="mb-2">
+              <label class="form-label">Пароль</label>
+              <input type="password" class="form-control" id="reg-password">
+            </div>
+            <div class="mb-2">
+              <label class="form-label">Компания</label>
+              <input type="text" class="form-control" id="reg-company">
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Должность</label>
+              <input type="text" class="form-control" id="reg-position">
+            </div>
+            <button class="btn btn-success w-100" onclick="doRegister()">Зарегистрироваться</button>
+          </div>
+        </div>
+
+        <!-- Подтверждение email -->
+        <div id="auth-confirm" style="display:none">
+          <div class="card p-4">
+            <h5 class="mb-3">Подтверждение email</h5>
+            <p class="text-muted small">Введите токен, отправленный на ваш email (или скопируйте из консоли сервера).</p>
+            <div class="mb-3">
+              <label class="form-label">Email</label>
+              <input type="email" class="form-control" id="confirm-email">
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Токен</label>
+              <input type="text" class="form-control" id="confirm-token" placeholder="abc123...">
+            </div>
+            <button class="btn btn-primary w-100" onclick="doConfirm()">Подтвердить</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== СЕКЦИЯ: КАТАЛОГ ===== -->
+  <div class="section" id="section-catalog">
+    <h4 class="mb-3">Каталог товаров</h4>
+    <div class="row g-3 mb-4">
+      <div class="col-md-4">
+        <select class="form-select" id="filter-shop" onchange="loadProducts()">
+          <option value="">Все магазины</option>
+        </select>
+      </div>
+      <div class="col-md-4">
+        <select class="form-select" id="filter-category" onchange="loadProducts()">
+          <option value="">Все категории</option>
+        </select>
+      </div>
+      <div class="col-md-4">
+        <button class="btn btn-outline-primary w-100" onclick="loadProducts()">Обновить</button>
+      </div>
+    </div>
+    <div id="product-list" class="row g-3">
+      <div class="col-12 text-center text-muted">Загрузка товаров...</div>
+    </div>
+  </div>
+
+  <!-- ===== СЕКЦИЯ: КОРЗИНА ===== -->
+  <div class="section" id="section-basket">
+    <h4 class="mb-3">Корзина</h4>
+    <div id="basket-content">
+      <div class="text-center text-muted">Загрузка корзины...</div>
+    </div>
+    <div id="basket-order-form" style="display:none" class="card p-4 mt-3">
+      <h5>Оформить заказ</h5>
+      <div class="mb-3">
+        <label class="form-label">Адрес доставки</label>
+        <select class="form-select" id="order-contact">
+          <option value="">Выберите адрес...</option>
+        </select>
+      </div>
+      <div class="d-flex gap-2">
+        <button class="btn btn-success" onclick="placeOrder()">Подтвердить заказ</button>
+        <a href="#" class="btn btn-outline-secondary" onclick="showSection('contacts')">Добавить адрес</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== СЕКЦИЯ: МОИ ЗАКАЗЫ ===== -->
+  <div class="section" id="section-orders">
+    <h4 class="mb-3">Мои заказы</h4>
+    <div id="orders-content">
+      <div class="text-center text-muted">Загрузка заказов...</div>
+    </div>
+  </div>
+
+  <!-- ===== СЕКЦИЯ: КОНТАКТЫ / АДРЕСА ===== -->
+  <div class="section" id="section-contacts">
+    <h4 class="mb-3">Адреса доставки</h4>
+    <div class="row">
+      <div class="col-md-5">
+        <div class="card p-4 mb-3">
+          <h6>Добавить адрес</h6>
+          <div class="mb-2">
+            <label class="form-label small">Город *</label>
+            <input type="text" class="form-control form-control-sm" id="c-city">
+          </div>
+          <div class="mb-2">
+            <label class="form-label small">Улица *</label>
+            <input type="text" class="form-control form-control-sm" id="c-street">
+          </div>
+          <div class="row g-1 mb-2">
+            <div class="col">
+              <label class="form-label small">Дом</label>
+              <input type="text" class="form-control form-control-sm" id="c-house">
+            </div>
+            <div class="col">
+              <label class="form-label small">Корпус</label>
+              <input type="text" class="form-control form-control-sm" id="c-structure">
+            </div>
+            <div class="col">
+              <label class="form-label small">Квартира</label>
+              <input type="text" class="form-control form-control-sm" id="c-apartment">
+            </div>
+          </div>
+          <div class="mb-3">
+            <label class="form-label small">Телефон *</label>
+            <input type="text" class="form-control form-control-sm" id="c-phone" placeholder="+7...">
+          </div>
+          <button class="btn btn-primary btn-sm w-100" onclick="addContact()">Добавить</button>
+        </div>
+      </div>
+      <div class="col-md-7">
+        <div id="contacts-list">
+          <div class="text-muted">Загрузка...</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /container -->
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+// ========================
+//  СОСТОЯНИЕ ПРИЛОЖЕНИЯ
+// ========================
+const API = '/api/v1';
+let authToken = localStorage.getItem('token') || null;
+let currentUser = null;
+let basketId = null;
+
+// ========================
+//  ВСПОМОГАТЕЛЬНЫЕ
+// ========================
+function headers(auth = true) {
+  const h = { 'Content-Type': 'application/json' };
+  if (auth && authToken) h['Authorization'] = `Token ${authToken}`;
+  return h;
+}
+
+async function api(method, url, body = null, auth = true) {
+  const opts = { method, headers: headers(auth) };
+  if (body) opts.body = JSON.stringify(body);
+  const res = await fetch(API + url, opts);
+  try { return await res.json(); } catch { return {}; }
+}
+
+function toast(msg, type = 'success') {
+  const id = 'toast-' + Date.now();
+  const colors = { success: 'bg-success', danger: 'bg-danger', warning: 'bg-warning text-dark', info: 'bg-info text-dark' };
+  const html = `<div id="${id}" class="toast align-items-center text-white ${colors[type]} border-0 show mb-2" role="alert">
+    <div class="d-flex"><div class="toast-body">${msg}</div>
+    <button type="button" class="btn-close btn-close-white me-2 m-auto" onclick="document.getElementById('${id}').remove()"></button>
+    </div></div>`;
+  document.getElementById('toast-container').insertAdjacentHTML('beforeend', html);
+  setTimeout(() => { const el = document.getElementById(id); if (el) el.remove(); }, 4000);
+}
+
+function statusLabel(state) {
+  const labels = {
+    basket: 'Корзина', new: 'Новый', confirmed: 'Подтверждён',
+    assembled: 'Собран', sent: 'Отправлен', delivered: 'Доставлен', canceled: 'Отменён'
+  };
+  return `<span class="order-status status-${state}">${labels[state] || state}</span>`;
+}
+
+// ========================
+//  НАВИГАЦИЯ
+// ========================
+function showSection(name) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.getElementById('section-' + name).classList.add('active');
+  if (name === 'catalog')   { loadFilters(); loadProducts(); }
+  if (name === 'basket')    { loadBasket(); }
+  if (name === 'orders')    { loadOrders(); }
+  if (name === 'contacts')  { loadContacts(); }
+}
+
+function switchAuthTab(tab) {
+  ['login','register','confirm'].forEach(t => {
+    document.getElementById('auth-' + t).style.display = (t === tab) ? '' : 'none';
+  });
+  document.querySelectorAll('#authTabs .nav-link').forEach(l => l.classList.remove('active'));
+  const idx = ['login','register','confirm'].indexOf(tab);
+  document.querySelectorAll('#authTabs .nav-link')[idx]?.classList.add('active');
+}
+
+// ========================
+//  АВТОРИЗАЦИЯ
+// ========================
+async function doLogin() {
+  const email = document.getElementById('login-email').value.trim();
+  const password = document.getElementById('login-password').value;
+  if (!email || !password) return toast('Заполните все поля', 'warning');
+  const res = await api('POST', '/user/login', { email, password }, false);
+  if (res.Status && res.Token) {
+    authToken = res.Token;
+    localStorage.setItem('token', authToken);
+    await updateNavAfterLogin();
+    showSection('catalog');
+    toast('Добро пожаловать!');
+  } else {
+    toast(res.Errors || 'Ошибка входа', 'danger');
+  }
+}
+
+async function doRegister() {
+  const data = {
+    first_name: document.getElementById('reg-firstname').value.trim(),
+    last_name:  document.getElementById('reg-lastname').value.trim(),
+    email:      document.getElementById('reg-email').value.trim(),
+    password:   document.getElementById('reg-password').value,
+    company:    document.getElementById('reg-company').value.trim(),
+    position:   document.getElementById('reg-position').value.trim(),
+  };
+  if (!data.first_name || !data.last_name || !data.email || !data.password)
+    return toast('Заполните обязательные поля', 'warning');
+  const res = await api('POST', '/user/register', data, false);
+  if (res.Status) {
+    toast('Регистрация успешна! Проверьте консоль сервера для получения токена подтверждения.', 'info');
+    document.getElementById('confirm-email').value = data.email;
+    document.getElementById('tab-confirm-link').style.display = '';
+    switchAuthTab('confirm');
+  } else {
+    const err = typeof res.Errors === 'object' ? JSON.stringify(res.Errors) : res.Errors;
+    toast(err || 'Ошибка регистрации', 'danger');
+  }
+}
+
+async function doConfirm() {
+  const email = document.getElementById('confirm-email').value.trim();
+  const token = document.getElementById('confirm-token').value.trim();
+  if (!email || !token) return toast('Введите email и токен', 'warning');
+  const res = await api('POST', '/user/register/confirm', { email, token }, false);
+  if (res.Status) {
+    toast('Email подтверждён! Теперь войдите в систему.');
+    document.getElementById('login-email').value = email;
+    switchAuthTab('login');
+  } else {
+    toast(res.Errors || 'Неверный токен', 'danger');
+  }
+}
+
+async function updateNavAfterLogin() {
+  const user = await api('GET', '/user/details');
+  if (user.email || user.first_name) {
+    currentUser = user;
+    document.getElementById('nav-username').textContent =
+      (user.first_name || '') + ' ' + (user.last_name || '') || user.email;
+    document.getElementById('nav-user-info').style.display = '';
+    document.getElementById('nav-logout-btn').style.display = '';
+    document.getElementById('nav-login-btn').style.display = 'none';
+  }
+}
+
+function logout() {
+  authToken = null;
+  currentUser = null;
+  basketId = null;
+  localStorage.removeItem('token');
+  document.getElementById('nav-user-info').style.display = 'none';
+  document.getElementById('nav-logout-btn').style.display = 'none';
+  document.getElementById('nav-login-btn').style.display = '';
+  document.getElementById('basket-badge').style.display = 'none';
+  showSection('auth');
+  toast('Вы вышли из системы', 'info');
+}
+
+// ========================
+//  КАТАЛОГ
+// ========================
+async function loadFilters() {
+  const [shops, cats] = await Promise.all([
+    api('GET', '/shops', null, false),
+    api('GET', '/categories', null, false),
+  ]);
+  const shopSel = document.getElementById('filter-shop');
+  const catSel  = document.getElementById('filter-category');
+  shopSel.innerHTML = '<option value="">Все магазины</option>';
+  catSel.innerHTML  = '<option value="">Все категории</option>';
+  (shops.results || []).forEach(s => {
+    shopSel.innerHTML += `<option value="${s.id}">${s.name}</option>`;
+  });
+  (cats.results || []).forEach(c => {
+    catSel.innerHTML += `<option value="${c.id}">${c.name}</option>`;
+  });
+}
+
+async function loadProducts() {
+  const shopId = document.getElementById('filter-shop').value;
+  const catId  = document.getElementById('filter-category').value;
+  let url = '/products';
+  const params = [];
+  if (shopId) params.push('shop_id=' + shopId);
+  if (catId)  params.push('category_id=' + catId);
+  if (params.length) url += '?' + params.join('&');
+
+  const res = await api('GET', url, null, false);
+  const products = res.results || res || [];
+  const el = document.getElementById('product-list');
+
+  if (!products.length) {
+    el.innerHTML = '<div class="col-12 text-center text-muted py-5">Товары не найдены</div>';
+    return;
+  }
+
+  el.innerHTML = products.map(p => `
+    <div class="col-md-4 col-sm-6">
+      <div class="card product-card h-100">
+        <div class="card-body">
+          <h6 class="card-title">${p.product?.name || '—'}</h6>
+          <div class="text-muted small mb-1">${p.product?.category || ''}</div>
+          ${p.model ? `<div class="small text-secondary mb-1">Модель: ${p.model}</div>` : ''}
+          <div class="mb-2">
+            ${(p.product_parameters || []).map(pp =>
+              `<span class="badge bg-light text-dark me-1">${pp.parameter}: ${pp.value}</span>`
+            ).join('')}
+          </div>
+          <div class="fw-bold text-primary mb-1">${p.price?.toLocaleString()} ₽</div>
+          <div class="small text-muted mb-2">РРЦ: ${p.price_rrc?.toLocaleString()} ₽ | В наличии: ${p.quantity} шт.</div>
+        </div>
+        <div class="card-footer bg-transparent">
+          ${authToken
+            ? `<button class="btn btn-primary btn-sm w-100" onclick="addToBasket(${p.id})">В корзину</button>`
+            : `<button class="btn btn-outline-secondary btn-sm w-100" onclick="showSection('auth')">Войдите для покупки</button>`
+          }
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+// ========================
+//  КОРЗИНА
+// ========================
+async function addToBasket(productInfoId) {
+  if (!authToken) return toast('Войдите в систему', 'warning');
+  const items = JSON.stringify([{ product_info: productInfoId, quantity: 1 }]);
+  const res = await api('POST', '/basket', { items });
+  if (res.Status) {
+    toast('Товар добавлен в корзину!');
+    updateBasketBadge();
+  } else {
+    toast(JSON.stringify(res.Errors) || 'Ошибка', 'danger');
+  }
+}
+
+async function updateBasketBadge() {
+  if (!authToken) return;
+  const res = await api('GET', '/basket');
+  const baskets = res.results || res || [];
+  const count = baskets.reduce((sum, b) => sum + (b.ordered_items?.length || 0), 0);
+  const badge = document.getElementById('basket-badge');
+  if (count > 0) { badge.textContent = count; badge.style.display = ''; }
+  else badge.style.display = 'none';
+}
+
+async function loadBasket() {
+  if (!authToken) {
+    document.getElementById('basket-content').innerHTML =
+      '<div class="alert alert-info">Войдите в систему для просмотра корзины.</div>';
+    return;
+  }
+  const res = await api('GET', '/basket');
+  const baskets = res.results || (Array.isArray(res) ? res : [res]);
+  const basket = baskets[0];
+  const el = document.getElementById('basket-content');
+  const formEl = document.getElementById('basket-order-form');
+
+  if (!basket || !(basket.ordered_items?.length)) {
+    el.innerHTML = '<div class="alert alert-secondary">Корзина пуста.</div>';
+    formEl.style.display = 'none';
+    return;
+  }
+
+  basketId = basket.id;
+  let rows = basket.ordered_items.map(item => `
+    <tr>
+      <td>${item.product_info?.product?.name || '—'}</td>
+      <td>${item.product_info?.product?.category || '—'}</td>
+      <td>${item.product_info?.price?.toLocaleString()} ₽</td>
+      <td>
+        <input type="number" class="form-control form-control-sm" style="width:70px"
+          value="${item.quantity}" min="1"
+          onchange="updateBasketItem(${item.id}, this.value)">
+      </td>
+      <td>${((item.product_info?.price || 0) * item.quantity).toLocaleString()} ₽</td>
+      <td>
+        <button class="btn btn-outline-danger btn-sm" onclick="removeFromBasket(${item.id})">✕</button>
+      </td>
+    </tr>
+  `).join('');
+
+  el.innerHTML = `
+    <div class="table-responsive">
+      <table class="table table-hover align-middle">
+        <thead class="table-light">
+          <tr><th>Товар</th><th>Категория</th><th>Цена</th><th>Кол-во</th><th>Сумма</th><th></th></tr>
+        </thead>
+        <tbody>${rows}</tbody>
+        <tfoot>
+          <tr class="fw-bold">
+            <td colspan="4" class="text-end">Итого:</td>
+            <td colspan="2">${(basket.total_sum || 0).toLocaleString()} ₽</td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>`;
+
+  // Загружаем контакты для выбора адреса
+  await loadContactsForOrder();
+  formEl.style.display = '';
+}
+
+async function updateBasketItem(itemId, qty) {
+  const items = JSON.stringify([{ id: itemId, quantity: parseInt(qty) }]);
+  await api('PUT', '/basket', { items });
+  updateBasketBadge();
+}
+
+async function removeFromBasket(itemId) {
+  await api('DELETE', '/basket', { items: String(itemId) });
+  loadBasket();
+  updateBasketBadge();
+}
+
+async function loadContactsForOrder() {
+  const res = await api('GET', '/user/contact');
+  const contacts = Array.isArray(res) ? res : [];
+  const sel = document.getElementById('order-contact');
+  sel.innerHTML = '<option value="">Выберите адрес...</option>';
+  contacts.forEach(c => {
+    sel.innerHTML += `<option value="${c.id}">${c.city}, ${c.street} ${c.house}, тел: ${c.phone}</option>`;
+  });
+}
+
+async function placeOrder() {
+  if (!basketId) return toast('Корзина пуста', 'warning');
+  const contactId = document.getElementById('order-contact').value;
+  if (!contactId) return toast('Выберите адрес доставки', 'warning');
+  const res = await api('POST', '/order', { id: String(basketId), contact: contactId });
+  if (res.Status) {
+    toast('Заказ успешно оформлен! Подтверждение отправлено на email.');
+    basketId = null;
+    document.getElementById('basket-badge').style.display = 'none';
+    showSection('orders');
+  } else {
+    toast(res.Errors || 'Ошибка оформления заказа', 'danger');
+  }
+}
+
+// ========================
+//  ЗАКАЗЫ
+// ========================
+async function loadOrders() {
+  if (!authToken) {
+    document.getElementById('orders-content').innerHTML =
+      '<div class="alert alert-info">Войдите в систему для просмотра заказов.</div>';
+    return;
+  }
+  const res = await api('GET', '/order');
+  const orders = res.results || (Array.isArray(res) ? res : []);
+  const el = document.getElementById('orders-content');
+
+  if (!orders.length) {
+    el.innerHTML = '<div class="alert alert-secondary">Заказов пока нет.</div>';
+    return;
+  }
+
+  el.innerHTML = orders.map(o => {
+    const date = new Date(o.dt).toLocaleString('ru-RU');
+    const items = (o.ordered_items || []).map(item => `
+      <li class="list-group-item d-flex justify-content-between align-items-center py-1">
+        <span>${item.product_info?.product?.name || '—'}</span>
+        <span class="text-muted small">${item.quantity} шт. × ${item.product_info?.price?.toLocaleString()} ₽</span>
+      </li>`).join('');
+    const contact = o.contact
+      ? `${o.contact.city}, ${o.contact.street} ${o.contact.house}, тел: ${o.contact.phone}`
+      : '—';
+    return `
+      <div class="card mb-3">
+        <div class="card-header d-flex justify-content-between align-items-center">
+          <span><strong>Заказ #${o.id}</strong> от ${date}</span>
+          <span>${statusLabel(o.state)}</span>
+        </div>
+        <div class="card-body p-0">
+          <ul class="list-group list-group-flush">${items}</ul>
+        </div>
+        <div class="card-footer d-flex justify-content-between text-muted small">
+          <span>Адрес: ${contact}</span>
+          <span class="fw-bold text-dark">Итого: ${(o.total_sum || 0).toLocaleString()} ₽</span>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+// ========================
+//  КОНТАКТЫ
+// ========================
+async function loadContacts() {
+  if (!authToken) {
+    document.getElementById('contacts-list').innerHTML =
+      '<div class="alert alert-info">Войдите в систему.</div>';
+    return;
+  }
+  const res = await api('GET', '/user/contact');
+  const contacts = Array.isArray(res) ? res : [];
+  const el = document.getElementById('contacts-list');
+
+  if (!contacts.length) {
+    el.innerHTML = '<div class="alert alert-secondary">Адреса не добавлены.</div>';
+    return;
+  }
+
+  el.innerHTML = contacts.map(c => `
+    <div class="card mb-2">
+      <div class="card-body d-flex justify-content-between align-items-start">
+        <div>
+          <div class="fw-semibold">${c.city}, ул. ${c.street}${c.house ? ', д. ' + c.house : ''}${c.apartment ? ', кв. ' + c.apartment : ''}</div>
+          <div class="text-muted small">Тел: ${c.phone}</div>
+        </div>
+        <button class="btn btn-outline-danger btn-sm" onclick="deleteContact(${c.id})">Удалить</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+async function addContact() {
+  const data = {
+    city:      document.getElementById('c-city').value.trim(),
+    street:    document.getElementById('c-street').value.trim(),
+    house:     document.getElementById('c-house').value.trim(),
+    structure: document.getElementById('c-structure').value.trim(),
+    apartment: document.getElementById('c-apartment').value.trim(),
+    phone:     document.getElementById('c-phone').value.trim(),
+  };
+  if (!data.city || !data.street || !data.phone)
+    return toast('Заполните город, улицу и телефон', 'warning');
+  const res = await api('POST', '/user/contact', data);
+  if (res.Status) {
+    toast('Адрес добавлен!');
+    ['c-city','c-street','c-house','c-structure','c-apartment','c-phone'].forEach(id => {
+      document.getElementById(id).value = '';
+    });
+    loadContacts();
+  } else {
+    toast(JSON.stringify(res.Errors) || 'Ошибка', 'danger');
+  }
+}
+
+async function deleteContact(id) {
+  const res = await api('DELETE', '/user/contact', { items: String(id) });
+  if (res.Status) { toast('Адрес удалён', 'info'); loadContacts(); }
+  else toast('Ошибка удаления', 'danger');
+}
+
+// ========================
+//  ИНИЦИАЛИЗАЦИЯ
+// ========================
+(async function init() {
+  if (authToken) {
+    await updateNavAfterLogin();
+    updateBasketBadge();
+    showSection('catalog');
+  } else {
+    showSection('auth');
+  }
+})();
+</script>
+</body>
+</html>

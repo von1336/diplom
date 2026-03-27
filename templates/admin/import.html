@@ -1,0 +1,28 @@
+{% extends "admin/base_site.html" %}
+{% block content %}
+<h1>Запуск импорта товаров (Celery задача do_import)</h1>
+
+<form method="post">
+    {% csrf_token %}
+    <div class="form-row">
+        <label for="url"><strong>URL YAML-файла:</strong></label><br>
+        <input type="url" id="url" name="url" style="width:500px;" required
+               placeholder="https://example.com/shop1.yaml">
+    </div>
+    <br>
+    <div class="form-row">
+        <label for="user_id"><strong>Пользователь (магазин):</strong></label><br>
+        <select id="user_id" name="user_id" required>
+            <option value="">-- выберите пользователя --</option>
+            {% for u in shop_users %}
+                <option value="{{ u.id }}">{{ u.email }} ({{ u.first_name }} {{ u.last_name }})</option>
+            {% endfor %}
+        </select>
+    </div>
+    <br>
+    <input type="submit" value="Запустить импорт" class="default">
+</form>
+
+<br>
+<p><a href="..">← Назад к списку магазинов</a></p>
+{% endblock %}
