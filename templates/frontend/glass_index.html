@@ -1,0 +1,667 @@
+﻿<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>VoN</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    :root {
+      --accent: #165dff;
+      --accent2: #57a0ff;
+      --ok: #0cb870;
+      --bg: linear-gradient(145deg, #edf4ff 0%, #ecf9f4 100%);
+      --ink: #101526;
+      --muted: #5d667d;
+      --glass: rgba(255, 255, 255, .72);
+      --line: rgba(255, 255, 255, .45);
+      --radius: 22px;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: radial-gradient(circle at 10% 10%, rgba(22, 93, 255, .18), transparent 32%), radial-gradient(circle at 88% 80%, rgba(12, 184, 112, .14), transparent 28%), var(--bg);
+      color: var(--ink);
+      font-family: "Manrope", sans-serif;
+    }
+    .app { padding: 18px 0 40px; }
+    .glass {
+      background: var(--glass);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: 0 20px 70px rgba(12, 30, 90, .14);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+    }
+    .topbar { padding: 14px 20px; margin-bottom: 14px; }
+    .navbar { --bs-navbar-padding-y: 0; }
+    .brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 1.12rem;
+      font-weight: 800;
+      color: var(--ink);
+    }
+    .brand-chip {
+      width: 40px;
+      height: 40px;
+      border-radius: 12px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      background: linear-gradient(140deg, var(--accent), var(--accent2));
+      box-shadow: 0 10px 26px rgba(22, 93, 255, .24);
+    }
+    .nav-link, .navbar-text { color: var(--muted) !important; font-weight: 700; }
+    .nav-link:hover, .nav-link:focus-visible { color: var(--accent) !important; }
+    .hero { padding: 26px; margin-bottom: 16px; }
+    .hero h1 { margin: 16px 0 10px; font-size: clamp(2.1rem, 5vw, 3.8rem); line-height: .95; font-weight: 800; max-width: 12ch; }
+    .muted { color: var(--muted); }
+    .hero-tag {
+      display: inline-flex;
+      align-items: center;
+      padding: 7px 12px;
+      border-radius: 999px;
+      background: rgba(22, 93, 255, .1);
+      color: var(--accent);
+      font-size: .78rem;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      font-weight: 800;
+    }
+    .hero-metrics { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin-top: 18px; }
+    .metric { padding: 12px; border-radius: 14px; border: 1px solid var(--line); background: rgba(255, 255, 255, .48); }
+    .metric span { display: block; font-size: .74rem; letter-spacing: .08em; text-transform: uppercase; font-weight: 800; color: var(--muted); }
+    .metric strong { display: block; margin-top: 6px; font-size: 1.18rem; font-weight: 800; }
+    .hero-side { height: 100%; padding: 16px; border-radius: 16px; border: 1px solid var(--line); background: linear-gradient(155deg, rgba(22,93,255,.12), rgba(255,255,255,.58)); }
+    .hero-side .big { font-size: 2.6rem; line-height: 1; font-weight: 800; margin: 10px 0; }
+    .hero-row { display: flex; justify-content: space-between; gap: 10px; padding: 9px 0; border-bottom: 1px solid rgba(16, 21, 38, .08); }
+    .hero-row:last-child { border-bottom: 0; }
+    .mono { font-family: "JetBrains Mono", monospace; }
+    .section { display: none; margin-top: 16px; }
+    .section.active { display: block; }
+    .section-head { display: flex; justify-content: space-between; align-items: end; flex-wrap: wrap; gap: 10px; margin-bottom: 12px; }
+    .section-head h2 { margin: 0; font-size: 1.66rem; font-weight: 800; }
+    .status-pill { padding: 9px 13px; border-radius: 999px; border: 1px solid var(--line); background: rgba(255,255,255,.5); color: var(--muted); font-size: .9rem; font-weight: 700; }
+    .status-pill:before { content: ""; width: 10px; height: 10px; border-radius: 50%; display: inline-block; margin-right: 9px; background: var(--ok); box-shadow: 0 0 0 6px rgba(12, 184, 112, .15); vertical-align: middle; }
+    .panel { padding: 16px; border-radius: 16px; }
+    .auth-tabs { padding: 6px; border-radius: 16px; border: 1px solid var(--line); background: rgba(255,255,255,.5); margin-bottom: 12px; }
+    .auth-tabs .nav-link { border: 0; border-radius: 12px; color: var(--muted); font-weight: 700; }
+    .auth-tabs .nav-link.active { color: var(--accent) !important; background: rgba(22, 93, 255, .12); }
+    .form-label { margin-bottom: 5px; font-size: .9rem; font-weight: 700; }
+    .form-control, .form-select { min-height: 47px; border-radius: 12px; border: 1px solid rgba(16, 21, 38, .12); background: rgba(255, 255, 255, .74); }
+    .form-control:focus, .form-select:focus { border-color: rgba(22, 93, 255, .45); box-shadow: 0 0 0 .23rem rgba(22, 93, 255, .18); }
+    .btn { min-height: 47px; border-radius: 999px; font-weight: 700; }
+    .btn-primary { border: 0; background: linear-gradient(145deg, var(--accent), var(--accent2)); box-shadow: 0 10px 24px rgba(22, 93, 255, .24); }
+    .btn-success { border: 0; background: linear-gradient(145deg, #0db26c, #45d197); box-shadow: 0 10px 24px rgba(13, 178, 108, .2); }
+    .btn-outline-primary, .btn-outline-secondary, .btn-outline-danger { background: rgba(255,255,255,.62); border: 1px solid var(--line); color: var(--ink); }
+    .filters, .basket-wrap, .order-card, .contact-left, .contact-right, .summary-card, .empty-card, .product-card { padding: 16px; border-radius: 16px; }
+    .products, .orders { display: grid; grid-template-columns: repeat(auto-fit, minmax(270px, 1fr)); gap: 12px; }
+    .tags { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0 12px; }
+    .tags span { border: 1px solid var(--line); border-radius: 999px; background: rgba(255,255,255,.58); padding: 6px 10px; font-size: .78rem; color: var(--muted); font-weight: 700; }
+    .price { color: var(--accent); font-size: 1.22rem; font-weight: 800; }
+    .price-meta { text-align: right; color: var(--muted); font-size: .82rem; line-height: 1.45; }
+    .table { --bs-table-bg: transparent; margin-bottom: 0; }
+    .table > :not(caption) > * > * { background: transparent; border-bottom-color: rgba(16, 21, 38, .08); }
+    .summary-card { margin-top: 12px; display: flex; justify-content: space-between; align-items: end; flex-wrap: wrap; gap: 10px; background: linear-gradient(145deg, rgba(22,93,255,.1), rgba(255,255,255,.6)); }
+    .summary-card strong { display: block; font-size: 2rem; line-height: 1; margin-bottom: 6px; font-weight: 800; }
+    .summary-actions { display: flex; flex-wrap: wrap; gap: 10px; width: 100%; max-width: 700px; align-items: end; }
+    .order-head, .order-foot { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
+    .order-items { margin: 12px 0; padding: 0; list-style: none; display: grid; gap: 8px; }
+    .order-items li { display: flex; justify-content: space-between; gap: 10px; color: var(--muted); }
+    .contacts-grid { display: grid; grid-template-columns: minmax(290px, .95fr) minmax(0, 1.2fr); gap: 12px; }
+    .contact-row { display: flex; justify-content: space-between; gap: 10px; padding: 12px 0; border-bottom: 1px solid rgba(16, 21, 38, .08); }
+    .contact-row:last-child { border-bottom: 0; }
+    .empty-card { text-align: center; }
+    .empty-card h3 { margin-bottom: 8px; font-size: 1.05rem; font-weight: 800; }
+    .toast-container { position: fixed; top: 90px; right: 16px; z-index: 1200; display: grid; gap: 8px; }
+    .toast { border-radius: 14px; border: 1px solid rgba(255,255,255,.4); min-width: 300px; }
+    .order-status { display: inline-flex; align-items: center; border-radius: 999px; padding: 6px 12px; font-size: .82rem; font-weight: 700; }
+    .status-basket { background: rgba(73, 80, 87, .12); color: #4a5160; }
+    .status-new { background: rgba(22, 93, 255, .14); color: #1950c7; }
+    .status-confirmed { background: rgba(12, 184, 112, .16); color: #0a7a4b; }
+    .status-assembled { background: rgba(241, 159, 72, .2); color: #9c5614; }
+    .status-sent { background: rgba(91, 104, 255, .16); color: #444bc9; }
+    .status-delivered { background: rgba(0, 171, 122, .18); color: #0a7f5b; }
+    .status-canceled { background: rgba(236, 59, 82, .16); color: #9f1f34; }
+    @media (max-width: 992px) { .hero-metrics, .contacts-grid { grid-template-columns: 1fr; } .hero h1 { max-width: none; } }
+    @media (max-width: 768px) { .topbar, .hero, .panel, .filters, .basket-wrap, .summary-card, .order-card, .contact-left, .contact-right, .product-card { padding: 14px; } .toast-container { left: 16px; right: 16px; } .toast { min-width: 0; } }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="container">
+      <div class="glass topbar">
+        <nav class="navbar navbar-expand-lg">
+          <div class="container-fluid px-0">
+            <span class="brand"><span class="brand-chip">V</span>VoN</span>
+            <button class="navbar-toggler border-0 shadow-none" type="button" data-bs-toggle="collapse" data-bs-target="#navMenu"><span class="navbar-toggler-icon"></span></button>
+            <div class="collapse navbar-collapse" id="navMenu">
+              <ul class="navbar-nav me-auto">
+                <li class="nav-item"><a class="nav-link" href="#" onclick="showSection('catalog'); return false;">Каталог</a></li>
+                <li class="nav-item"><a class="nav-link" href="#" onclick="showSection('basket'); return false;">Корзина <span class="badge rounded-pill text-bg-warning ms-1" id="basket-badge" style="display:none">0</span></a></li>
+                <li class="nav-item"><a class="nav-link" href="#" onclick="showSection('orders'); return false;">Заказы</a></li>
+                <li class="nav-item"><a class="nav-link" href="#" onclick="showSection('contacts'); return false;">Адреса</a></li>
+              </ul>
+              <ul class="navbar-nav ms-auto">
+                <li class="nav-item" id="nav-user-info" style="display:none"><span class="navbar-text" id="nav-username"></span></li>
+                <li class="nav-item" id="nav-logout-btn" style="display:none"><a class="nav-link" href="#" onclick="logout(); return false;">Выйти</a></li>
+                <li class="nav-item" id="nav-login-btn"><a class="nav-link" href="#" onclick="showSection('auth'); return false;">Войти</a></li>
+              </ul>
+            </div>
+          </div>
+        </nav>
+      </div>
+      <section class="glass hero">
+        <div class="row g-4 align-items-stretch">
+          <div class="col-lg-7">
+            <span class="hero-tag">B2B платформа</span>
+            <h1>VoN. Управляйте закупками в одном окне.</h1>
+            <p class="muted">Интерфейс для каталога, корзины, заказов и адресов доставки. Сделан под рабочий сценарий: быстрые действия, читаемые статусы и чистая навигация.</p>
+            <div class="d-flex gap-2 flex-wrap mt-4">
+              <button class="btn btn-primary px-4" onclick="showSection(authToken ? 'catalog' : 'auth')">Открыть систему</button>
+              <button class="btn btn-outline-secondary px-4" onclick="showSection('catalog')">Смотреть каталог</button>
+            </div>
+            <div class="hero-metrics">
+              <div class="metric"><span>Название</span><strong>VoN</strong></div>
+              <div class="metric"><span>Асинхронность</span><strong>Celery + Redis</strong></div>
+              <div class="metric"><span>Протокол</span><strong>REST API</strong></div>
+            </div>
+          </div>
+          <div class="col-lg-5">
+            <div class="hero-side">
+              <div class="muted text-uppercase fw-bold" style="letter-spacing:.08em;">Операционный режим</div>
+              <div class="big">24/7</div>
+              <p class="muted mb-3">Платформа для демонстрации диплома и реального потока заказов поставщикам.</p>
+              <div class="hero-row"><span class="muted">Авторизация</span><span class="mono">Token auth</span></div>
+              <div class="hero-row"><span class="muted">Импорт прайсов</span><span class="mono">YAML</span></div>
+              <div class="hero-row"><span class="muted">Документация</span><span class="mono">OpenAPI</span></div>
+              <div class="hero-row"><span class="muted">UI</span><span class="mono">Glass Style</span></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <div class="toast-container" id="toast-container"></div>
+
+      <section class="section active" id="section-auth">
+        <div class="section-head">
+          <div>
+            <h2>Доступ к аккаунту</h2>
+            <p class="muted mb-0">Вход, регистрация и подтверждение email.</p>
+          </div>
+          <div class="status-pill">Безопасный вход по токену</div>
+        </div>
+        <div class="row justify-content-center">
+          <div class="col-lg-5">
+            <ul class="nav nav-fill auth-tabs" id="authTabs">
+              <li class="nav-item"><a class="nav-link active" href="#" onclick="switchAuthTab('login'); return false;">Вход</a></li>
+              <li class="nav-item"><a class="nav-link" href="#" onclick="switchAuthTab('register'); return false;">Регистрация</a></li>
+              <li class="nav-item" id="tab-confirm-link" style="display:none"><a class="nav-link" href="#" onclick="switchAuthTab('confirm'); return false;">Подтверждение</a></li>
+            </ul>
+            <div id="auth-login">
+              <div class="glass panel">
+                <h3 class="h4 fw-bold mb-3">Войти в VoN</h3>
+                <div class="mb-3"><label class="form-label" for="login-email">Email</label><input type="email" class="form-control" id="login-email" placeholder="user@example.com"></div>
+                <div class="mb-3"><label class="form-label" for="login-password">Пароль</label><input type="password" class="form-control" id="login-password"></div>
+                <button class="btn btn-primary w-100" onclick="doLogin()">Войти</button>
+                <div class="d-grid gap-2 mt-3">
+                  <a class="btn btn-outline-secondary w-100" href="/auth/login/google-oauth2/">Войти через Google</a>
+                  <a class="btn btn-outline-secondary w-100" href="/auth/login/github/">Войти через GitHub</a>
+                </div>
+              </div>
+            </div>
+            <div id="auth-register" style="display:none">
+              <div class="glass panel">
+                <h3 class="h4 fw-bold mb-3">Создать аккаунт</h3>
+                <div class="row g-3 mb-3"><div class="col"><label class="form-label" for="reg-firstname">Имя</label><input type="text" class="form-control" id="reg-firstname"></div><div class="col"><label class="form-label" for="reg-lastname">Фамилия</label><input type="text" class="form-control" id="reg-lastname"></div></div>
+                <div class="mb-3"><label class="form-label" for="reg-email">Email</label><input type="email" class="form-control" id="reg-email"></div>
+                <div class="mb-3"><label class="form-label" for="reg-password">Пароль</label><input type="password" class="form-control" id="reg-password"></div>
+                <div class="mb-3"><label class="form-label" for="reg-company">Компания</label><input type="text" class="form-control" id="reg-company"></div>
+                <div class="mb-4"><label class="form-label" for="reg-position">Должность</label><input type="text" class="form-control" id="reg-position"></div>
+                <button class="btn btn-success w-100" onclick="doRegister()">Зарегистрироваться</button>
+              </div>
+            </div>
+            <div id="auth-confirm" style="display:none">
+              <div class="glass panel">
+                <h3 class="h4 fw-bold mb-2">Подтверждение email</h3>
+                <p class="muted mb-3">Введите токен из письма или из консоли сервера.</p>
+                <div class="mb-3"><label class="form-label" for="confirm-email">Email</label><input type="email" class="form-control" id="confirm-email"></div>
+                <div class="mb-4"><label class="form-label" for="confirm-token">Токен</label><input type="text" class="form-control mono" id="confirm-token" placeholder="abc123..."></div>
+                <button class="btn btn-primary w-100" onclick="doConfirm()">Подтвердить email</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section" id="section-catalog">
+        <div class="section-head"><div><h2>Каталог товаров</h2><p class="muted mb-0">Фильтруйте предложения и добавляйте позиции в корзину.</p></div><div class="status-pill">Актуальные прайсы поставщиков</div></div>
+        <div class="glass filters">
+          <div class="row g-3">
+            <div class="col-lg-4"><label class="form-label" for="filter-shop">Магазин</label><select class="form-select" id="filter-shop" onchange="loadProducts()"><option value="">Все магазины</option></select></div>
+            <div class="col-lg-4"><label class="form-label" for="filter-category">Категория</label><select class="form-select" id="filter-category" onchange="loadProducts()"><option value="">Все категории</option></select></div>
+            <div class="col-lg-4 d-flex align-items-end"><button class="btn btn-outline-primary w-100" onclick="loadProducts()">Обновить результаты</button></div>
+          </div>
+        </div>
+        <div id="product-list" class="products mt-3"><div class="glass empty-card"><h3>Загрузка каталога</h3><p class="muted mb-0">Получаем товары из API.</p></div></div>
+      </section>
+
+      <section class="section" id="section-basket">
+        <div class="section-head"><div><h2>Корзина</h2><p class="muted mb-0">Проверьте позиции и оформите заказ.</p></div></div>
+        <div id="basket-content" class="glass basket-wrap"><div class="empty-card"><h3>Загрузка корзины</h3><p class="muted mb-0">Подготавливаем ваш заказ.</p></div></div>
+        <div id="basket-order-form" style="display:none" class="glass summary-card">
+          <div><div class="muted text-uppercase fw-bold mb-2" style="letter-spacing:.08em;">Оформление</div><strong id="basket-summary-total">0 ₽</strong><div class="muted">Выберите адрес доставки для подтверждения заказа.</div></div>
+          <div class="summary-actions"><div class="flex-grow-1"><label class="form-label" for="order-contact">Адрес доставки</label><select class="form-select" id="order-contact"><option value="">Выберите адрес...</option></select></div><button class="btn btn-success px-4" onclick="placeOrder()">Подтвердить заказ</button><button class="btn btn-outline-secondary px-4" onclick="showSection('contacts')">Добавить адрес</button></div>
+        </div>
+      </section>
+
+      <section class="section" id="section-orders">
+        <div class="section-head"><div><h2>История заказов</h2><p class="muted mb-0">Следите за статусами и составом каждой поставки.</p></div></div>
+        <div id="orders-content" class="orders"><div class="glass empty-card"><h3>Загрузка заказов</h3><p class="muted mb-0">Проверяем историю покупок.</p></div></div>
+      </section>
+
+      <section class="section" id="section-contacts">
+        <div class="section-head"><div><h2>Адреса доставки</h2><p class="muted mb-0">Сохраните точки доставки для быстрых заказов.</p></div></div>
+        <div class="contacts-grid">
+          <div class="glass contact-left">
+            <h3 class="h5 fw-bold mb-3">Новый адрес</h3>
+            <div class="mb-3"><label class="form-label" for="c-city">Город *</label><input type="text" class="form-control" id="c-city"></div>
+            <div class="mb-3"><label class="form-label" for="c-street">Улица *</label><input type="text" class="form-control" id="c-street"></div>
+            <div class="row g-3 mb-3"><div class="col-md-4"><label class="form-label" for="c-house">Дом</label><input type="text" class="form-control" id="c-house"></div><div class="col-md-4"><label class="form-label" for="c-structure">Корпус</label><input type="text" class="form-control" id="c-structure"></div><div class="col-md-4"><label class="form-label" for="c-apartment">Квартира</label><input type="text" class="form-control" id="c-apartment"></div></div>
+            <div class="mb-4"><label class="form-label" for="c-phone">Телефон *</label><input type="text" class="form-control" id="c-phone" placeholder="+7..."></div>
+            <button class="btn btn-primary w-100" onclick="addContact()">Сохранить адрес</button>
+          </div>
+          <div class="glass contact-right">
+            <h3 class="h5 fw-bold mb-3">Список адресов</h3>
+            <div id="contacts-list"><div class="empty-card"><h3>Загрузка адресов</h3><p class="muted mb-0">Собираем ваши контактные точки доставки.</p></div></div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    const API = '/api/v1';
+    let authToken = localStorage.getItem('token') || null;
+    let currentUser = null;
+    let basketId = null;
+
+    function consumeAuthHash() {
+      const hash = window.location.hash.replace(/^#/, '');
+      if (!hash) return;
+      const params = new URLSearchParams(hash);
+      const token = params.get('token');
+      const socialError = params.get('social_error');
+      if (token) {
+        authToken = token;
+        localStorage.setItem('token', token);
+        history.replaceState(null, '', window.location.pathname + window.location.search);
+        toast('Вход через социальную сеть выполнен.');
+      } else if (socialError) {
+        history.replaceState(null, '', window.location.pathname + window.location.search);
+        toast('Не удалось завершить вход через социальную сеть.', 'danger');
+      }
+    }
+
+    function headers(auth = true) {
+      const h = { 'Content-Type': 'application/json' };
+      if (auth && authToken) h.Authorization = `Token ${authToken}`;
+      return h;
+    }
+
+    async function api(method, url, body = null, auth = true) {
+      const opts = { method, headers: headers(auth) };
+      if (body) opts.body = JSON.stringify(body);
+      const res = await fetch(API + url, opts);
+      try { return await res.json(); } catch { return {}; }
+    }
+
+    function money(value) {
+      return `${Number(value || 0).toLocaleString('ru-RU')} ₽`;
+    }
+
+    function esc(value) {
+      return String(value ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
+    function toast(msg, type = 'success') {
+      const id = `toast-${Date.now()}`;
+      const c = {
+        success: 'rgba(12, 184, 112, .9)',
+        danger: 'rgba(236, 59, 82, .92)',
+        warning: 'rgba(241, 159, 72, .92)',
+        info: 'rgba(22, 93, 255, .9)',
+      };
+      const html = `<div id="${id}" class="toast show text-white" role="alert" style="background:${c[type] || c.success}"><div class="d-flex"><div class="toast-body">${esc(msg)}</div><button type="button" class="btn-close btn-close-white me-2 m-auto" onclick="document.getElementById('${id}').remove()"></button></div></div>`;
+      document.getElementById('toast-container').insertAdjacentHTML('beforeend', html);
+      setTimeout(() => {
+        const el = document.getElementById(id);
+        if (el) el.remove();
+      }, 4200);
+    }
+
+    function statusLabel(state) {
+      const labels = { basket: 'Корзина', new: 'Новый', confirmed: 'Подтверждён', assembled: 'Собран', sent: 'Отправлен', delivered: 'Доставлен', canceled: 'Отменён' };
+      return `<span class="order-status status-${state}">${labels[state] || esc(state)}</span>`;
+    }
+
+    function empty(title, text) {
+      return `<div class="glass empty-card"><h3>${esc(title)}</h3><p class="muted mb-0">${esc(text)}</p></div>`;
+    }
+
+    function showSection(name) {
+      document.querySelectorAll('.section').forEach((el) => el.classList.remove('active'));
+      document.getElementById(`section-${name}`).classList.add('active');
+      if (name === 'catalog') { loadFilters(); loadProducts(); }
+      if (name === 'basket') loadBasket();
+      if (name === 'orders') loadOrders();
+      if (name === 'contacts') loadContacts();
+    }
+
+    function switchAuthTab(tab) {
+      ['login', 'register', 'confirm'].forEach((name) => {
+        document.getElementById(`auth-${name}`).style.display = name === tab ? '' : 'none';
+      });
+      document.querySelectorAll('#authTabs .nav-link').forEach((link) => link.classList.remove('active'));
+      const idx = ['login', 'register', 'confirm'].indexOf(tab);
+      document.querySelectorAll('#authTabs .nav-link')[idx]?.classList.add('active');
+    }
+
+    async function doLogin() {
+      const email = document.getElementById('login-email').value.trim();
+      const password = document.getElementById('login-password').value;
+      if (!email || !password) return toast('Заполните email и пароль.', 'warning');
+      const res = await api('POST', '/user/login', { email, password }, false);
+      if (res.Status && res.Token) {
+        authToken = res.Token;
+        localStorage.setItem('token', authToken);
+        await updateNavAfterLogin();
+        await updateBasketBadge();
+        showSection('catalog');
+        toast('Вход выполнен.');
+      } else {
+        toast(res.Errors || 'Ошибка входа.', 'danger');
+      }
+    }
+
+    async function doRegister() {
+      const data = {
+        first_name: document.getElementById('reg-firstname').value.trim(),
+        last_name: document.getElementById('reg-lastname').value.trim(),
+        email: document.getElementById('reg-email').value.trim(),
+        password: document.getElementById('reg-password').value,
+        company: document.getElementById('reg-company').value.trim(),
+        position: document.getElementById('reg-position').value.trim(),
+      };
+      if (!data.first_name || !data.last_name || !data.email || !data.password) {
+        return toast('Заполните обязательные поля регистрации.', 'warning');
+      }
+      const res = await api('POST', '/user/register', data, false);
+      if (res.Status) {
+        toast('Регистрация выполнена. Проверьте токен подтверждения.', 'info');
+        document.getElementById('confirm-email').value = data.email;
+        document.getElementById('tab-confirm-link').style.display = '';
+        switchAuthTab('confirm');
+      } else {
+        const err = typeof res.Errors === 'object' ? JSON.stringify(res.Errors) : (res.Errors || 'Ошибка регистрации.');
+        toast(err, 'danger');
+      }
+    }
+
+    async function doConfirm() {
+      const email = document.getElementById('confirm-email').value.trim();
+      const token = document.getElementById('confirm-token').value.trim();
+      if (!email || !token) return toast('Введите email и токен.', 'warning');
+      const res = await api('POST', '/user/register/confirm', { email, token }, false);
+      if (res.Status) {
+        toast('Email подтверждён. Теперь можно войти.');
+        document.getElementById('login-email').value = email;
+        switchAuthTab('login');
+      } else {
+        toast(res.Errors || 'Неверный токен.', 'danger');
+      }
+    }
+
+    async function updateNavAfterLogin() {
+      const user = await api('GET', '/user/details');
+      if (user.email || user.first_name) {
+        currentUser = user;
+        const full = `${user.first_name || ''} ${user.last_name || ''}`.trim() || user.email;
+        document.getElementById('nav-username').textContent = full;
+        document.getElementById('nav-user-info').style.display = '';
+        document.getElementById('nav-logout-btn').style.display = '';
+        document.getElementById('nav-login-btn').style.display = 'none';
+      }
+    }
+
+    function logout() {
+      authToken = null;
+      currentUser = null;
+      basketId = null;
+      localStorage.removeItem('token');
+      document.getElementById('nav-user-info').style.display = 'none';
+      document.getElementById('nav-logout-btn').style.display = 'none';
+      document.getElementById('nav-login-btn').style.display = '';
+      document.getElementById('basket-badge').style.display = 'none';
+      showSection('auth');
+      toast('Вы вышли из системы.', 'info');
+    }
+
+    async function loadFilters() {
+      const [shops, cats] = await Promise.all([
+        api('GET', '/shops', null, false),
+        api('GET', '/categories', null, false),
+      ]);
+      const shop = document.getElementById('filter-shop');
+      const cat = document.getElementById('filter-category');
+      shop.innerHTML = '<option value="">Все магазины</option>';
+      cat.innerHTML = '<option value="">Все категории</option>';
+      (shops.results || shops || []).forEach((s) => {
+        shop.innerHTML += `<option value="${s.id}">${esc(s.name)}</option>`;
+      });
+      (cats.results || cats || []).forEach((c) => {
+        cat.innerHTML += `<option value="${c.id}">${esc(c.name)}</option>`;
+      });
+    }
+
+    async function loadProducts() {
+      const shopId = document.getElementById('filter-shop').value;
+      const catId = document.getElementById('filter-category').value;
+      let url = '/products';
+      const params = [];
+      if (shopId) params.push(`shop_id=${shopId}`);
+      if (catId) params.push(`category_id=${catId}`);
+      if (params.length) url += `?${params.join('&')}`;
+      const res = await api('GET', url, null, false);
+      const products = res.results || res || [];
+      const el = document.getElementById('product-list');
+      if (!products.length) {
+        el.innerHTML = empty('Товары не найдены', 'Попробуйте изменить фильтры или обновить каталог.');
+        return;
+      }
+      el.innerHTML = products.map((p) => `
+        <article class="glass product-card">
+          ${p.product?.image_url ? `<img src="${esc(p.product.image_url)}" alt="${esc(p.product?.name || 'Товар')}" style="width:100%;height:220px;object-fit:cover;border-radius:16px;margin-bottom:14px;">` : ''}
+          <div class="product-title">${esc(p.product?.name || 'Без названия')}</div>
+          <div class="muted mb-2">${esc(p.product?.category || 'Без категории')}</div>
+          ${p.model ? `<div class="muted mb-2">Модель: ${esc(p.model)}</div>` : ''}
+          <div class="tags">${(p.product_parameters || []).map((pp) => `<span>${esc(pp.parameter)}: ${esc(pp.value)}</span>`).join('') || '<span>Характеристики не указаны</span>'}</div>
+          <div class="d-flex justify-content-between align-items-end gap-3 mb-3">
+            <div class="price">${money(p.price)}</div>
+            <div class="price-meta">РРЦ: ${money(p.price_rrc)}<br>В наличии: ${esc(p.quantity)} шт.</div>
+          </div>
+          ${authToken ? `<button class="btn btn-primary w-100" onclick="addToBasket(${p.id})">В корзину</button>` : `<button class="btn btn-outline-secondary w-100" onclick="showSection('auth')">Войдите для покупки</button>`}
+        </article>
+      `).join('');
+    }
+    async function addToBasket(id) {
+      if (!authToken) return toast('Сначала войдите в систему.', 'warning');
+      const res = await api('POST', '/basket', { items: JSON.stringify([{ product_info: id, quantity: 1 }]) });
+      if (res.Status) {
+        toast('Товар добавлен в корзину.');
+        await updateBasketBadge();
+      } else {
+        toast(typeof res.Errors === 'string' ? res.Errors : JSON.stringify(res.Errors || {}), 'danger');
+      }
+    }
+
+    async function updateBasketBadge() {
+      if (!authToken) return;
+      const res = await api('GET', '/basket');
+      const baskets = res.results || res || [];
+      const count = baskets.reduce((sum, b) => sum + (b.ordered_items?.length || 0), 0);
+      const badge = document.getElementById('basket-badge');
+      if (count > 0) {
+        badge.textContent = count;
+        badge.style.display = '';
+      } else {
+        badge.style.display = 'none';
+      }
+    }
+
+    async function loadBasket() {
+      const content = document.getElementById('basket-content');
+      const form = document.getElementById('basket-order-form');
+      if (!authToken) {
+        content.innerHTML = empty('Вход обязателен', 'Авторизуйтесь, чтобы увидеть корзину и продолжить оформление.');
+        form.style.display = 'none';
+        return;
+      }
+      const res = await api('GET', '/basket');
+      const baskets = res.results || (Array.isArray(res) ? res : [res]);
+      const basket = baskets[0];
+      if (!basket || !(basket.ordered_items?.length)) {
+        content.innerHTML = empty('Корзина пуста', 'Добавьте товары из каталога, чтобы сформировать заказ.');
+        form.style.display = 'none';
+        return;
+      }
+      basketId = basket.id;
+      content.innerHTML = `<div class="table-responsive"><table class="table align-middle"><thead><tr><th>Товар</th><th>Категория</th><th>Цена</th><th>Количество</th><th>Сумма</th><th></th></tr></thead><tbody>${basket.ordered_items.map((i) => `<tr><td>${esc(i.product_info?.product?.name || '—')}</td><td>${esc(i.product_info?.product?.category || '—')}</td><td>${money(i.product_info?.price)}</td><td><input type="number" class="form-control form-control-sm" style="max-width:88px" value="${i.quantity}" min="1" onchange="updateBasketItem(${i.id}, this.value)"></td><td>${money((i.product_info?.price || 0) * i.quantity)}</td><td><button class="btn btn-outline-danger btn-sm" onclick="removeFromBasket(${i.id})">Удалить</button></td></tr>`).join('')}</tbody></table></div>`;
+      document.getElementById('basket-summary-total').textContent = money(basket.total_sum || 0);
+      await loadContactsForOrder();
+      form.style.display = 'flex';
+    }
+
+    async function updateBasketItem(id, qty) {
+      await api('PUT', '/basket', { items: JSON.stringify([{ id, quantity: parseInt(qty, 10) }]) });
+      await loadBasket();
+      await updateBasketBadge();
+    }
+
+    async function removeFromBasket(id) {
+      await api('DELETE', '/basket', { items: String(id) });
+      await loadBasket();
+      await updateBasketBadge();
+    }
+
+    async function loadContactsForOrder() {
+      const res = await api('GET', '/user/contact');
+      const contacts = Array.isArray(res) ? res : [];
+      const sel = document.getElementById('order-contact');
+      sel.innerHTML = '<option value="">Выберите адрес...</option>';
+      contacts.forEach((c) => {
+        sel.innerHTML += `<option value="${c.id}">${esc(c.city)}, ${esc(c.street)} ${esc(c.house || '')}, тел: ${esc(c.phone)}</option>`;
+      });
+    }
+
+    async function placeOrder() {
+      if (!basketId) return toast('Корзина пока пуста.', 'warning');
+      const contact = document.getElementById('order-contact').value;
+      if (!contact) return toast('Выберите адрес доставки.', 'warning');
+      const res = await api('POST', '/order', { id: String(basketId), contact });
+      if (res.Status) {
+        toast('Заказ оформлен. Подтверждение отправлено на email.');
+        basketId = null;
+        document.getElementById('basket-badge').style.display = 'none';
+        showSection('orders');
+      } else {
+        toast(res.Errors || 'Не удалось оформить заказ.', 'danger');
+      }
+    }
+
+    async function loadOrders() {
+      const el = document.getElementById('orders-content');
+      if (!authToken) {
+        el.innerHTML = empty('Вход обязателен', 'Авторизуйтесь, чтобы видеть историю заказов.');
+        return;
+      }
+      const res = await api('GET', '/order');
+      const orders = res.results || (Array.isArray(res) ? res : []);
+      if (!orders.length) {
+        el.innerHTML = empty('Заказов пока нет', 'После оформления поставки они появятся в этом разделе.');
+        return;
+      }
+      el.innerHTML = orders.map((o) => `<article class="glass order-card"><div class="order-head"><div><div class="fw-bold">Заказ #${o.id}</div><div class="muted">Создан ${new Date(o.dt).toLocaleString('ru-RU')}</div></div>${statusLabel(o.state)}</div><ul class="order-items">${(o.ordered_items || []).map((i) => `<li><span>${esc(i.product_info?.product?.name || '—')}</span><span>${esc(i.quantity)} шт. × ${money(i.product_info?.price)}</span></li>`).join('')}</ul><div class="order-foot"><span class="muted">Адрес: ${esc(o.contact ? `${o.contact.city}, ${o.contact.street} ${o.contact.house || ''}, тел: ${o.contact.phone}` : 'Адрес не указан')}</span><strong>${money(o.total_sum || 0)}</strong></div></article>`).join('');
+    }
+
+    async function loadContacts() {
+      const el = document.getElementById('contacts-list');
+      if (!authToken) {
+        el.innerHTML = empty('Вход обязателен', 'Авторизуйтесь, чтобы управлять адресами доставки.');
+        return;
+      }
+      const res = await api('GET', '/user/contact');
+      const contacts = Array.isArray(res) ? res : [];
+      if (!contacts.length) {
+        el.innerHTML = empty('Адреса не добавлены', 'Создайте первый контакт для оформления заказов.');
+        return;
+      }
+      el.innerHTML = contacts.map((c) => `<div class="contact-row"><div><div class="fw-bold">${esc(c.city)}, ул. ${esc(c.street)}${c.house ? `, д. ${esc(c.house)}` : ''}${c.apartment ? `, кв. ${esc(c.apartment)}` : ''}</div><div class="muted">Телефон: ${esc(c.phone)}</div></div><button class="btn btn-outline-danger btn-sm" onclick="deleteContact(${c.id})">Удалить</button></div>`).join('');
+    }
+
+    async function addContact() {
+      const data = {
+        city: document.getElementById('c-city').value.trim(),
+        street: document.getElementById('c-street').value.trim(),
+        house: document.getElementById('c-house').value.trim(),
+        structure: document.getElementById('c-structure').value.trim(),
+        apartment: document.getElementById('c-apartment').value.trim(),
+        phone: document.getElementById('c-phone').value.trim(),
+      };
+      if (!data.city || !data.street || !data.phone) return toast('Укажите город, улицу и телефон.', 'warning');
+      const res = await api('POST', '/user/contact', data);
+      if (res.Status) {
+        toast('Адрес сохранён.');
+        ['c-city', 'c-street', 'c-house', 'c-structure', 'c-apartment', 'c-phone'].forEach((id) => { document.getElementById(id).value = ''; });
+        await loadContacts();
+      } else {
+        toast(typeof res.Errors === 'string' ? res.Errors : JSON.stringify(res.Errors || {}), 'danger');
+      }
+    }
+
+    async function deleteContact(id) {
+      const res = await api('DELETE', '/user/contact', { items: String(id) });
+      if (res.Status) {
+        toast('Адрес удалён.', 'info');
+        await loadContacts();
+      } else {
+        toast('Не удалось удалить адрес.', 'danger');
+      }
+    }
+
+    (async function init() {
+      consumeAuthHash();
+      if (authToken) {
+        await updateNavAfterLogin();
+        await updateBasketBadge();
+        showSection('catalog');
+      } else {
+        showSection('auth');
+      }
+    })();
+  </script>
+</body>
+</html>
