@@ -1,232 +1,334 @@
-# Дипломный проект профессии «Python-разработчик: расширенный курс»
+# VoN
 
-## Backend-приложение для автоматизации закупок
+VoN is a Django-based B2B procurement platform built for buyers, suppliers, and administrators. The project combines a REST API, a browser-based SPA frontend, Django Admin, background task processing with Celery, and a set of operational integrations that make the diploma project look and behave closer to a commercial system than a учебный шаблон.
 
-### Цель дипломного проекта
+The system is API-first, but it also includes a ready-to-run UI at the root route `/` and a production-style admin panel for operational workflows.
 
-Создадите и настроите проект по автоматизации закупок в розничной сети, проработаете модели данных, импорт товаров, API views.
+## Core Functional Areas
 
-Вам нужно:
+### Authentication and Accounts
 
-* разработать backend для сервиса заказа товаров,
-* усовершенствовать навыки работы с Django ORM через проработку моделей товаров и связанных сущностей,
-* реализовать импорт и экспорт товаров,
-* внедрить систему управления заказами,
-* оптимизировать методы с использованием асинхронности,
-* освоить работу со сторонними библиотеками и фреймворками,
-* подготовить документацию к проекту,
-* использовать AI инструменты для решения задач.
+The platform supports multiple authentication flows:
 
------
+- local registration with email confirmation token
+- token-based login for API access
+- password reset via `django-rest-passwordreset`
+- social login through Google and GitHub
+- DRF token bridge after successful OAuth login, so the frontend continues to work with the same token auth scheme as the REST API
 
-## Чеклист готовности к работе над проектом
+New social-auth users are treated as verified users and activated on first successful OAuth callback. Existing local accounts can be associated by email through the social-auth pipeline.
 
-1. Изучить материалы лекции подготовки к дипломной работе.
-2. Подготовить компьютер или виртуальную машину с ОС Linux или MacOS (не рекомендуем использовать Windows).
-3. Установить IDE с поддержкой Python: Pycharm, VS Code или др.
-4. Установить версию Python 3.10 или более позднюю.
-5. Установить AI-плагин из списка:
-- [Machinet](https://www.machinet.net/),
-- [Codeium](https://codeium.com/),
-- [Tabnine](https://www.tabnine.com/),
-- [Amazon Сodewhisperer](https://aws.amazon.com/ru/codewhisperer/),
-- [Mutable.AI](https://mutable.ai/pricing/),
-- [Google Duet-AI](https://cloud.google.com/duet-ai/docs/developers/use-in-ide).
+### Catalog and Ordering
 
------
+Buyers can:
 
-## Инструкция к работе над проектом
+- browse categories, shops, and product offers
+- filter catalog data by shop and category
+- add items to basket
+- update basket quantities and remove positions
+- create an order from basket with a delivery contact
+- view completed orders and their statuses
 
-### Общее описание приложения
+Suppliers can:
 
-Приложение предназначено для автоматизации закупок в розничной сети через REST API.
+- import goods from a remote YAML price list
+- enable or disable order intake
+- view supplier-specific orders
 
-**Внимание! Все взаимодействие с приложением ведется через API запросы. 
-Реализация фронтенд-приложения возможна только по желанию обучающегося**
+### Admin and Operations
 
-**Пользователи сервиса:**
+The admin panel is enhanced beyond the default Django setup:
 
-1. Клиент (покупатель):
+- Baton theme is enabled for improved navigation and presentation
+- suppliers can import a price list through a dedicated admin page
+- user avatars and product images are visible in admin previews
+- search fields and list filters are tuned for day-to-day operations
 
-- делает ежедневные закупки по каталогу, в котором представлены товары от нескольких поставщиков,
-- в одном заказе можно указать товары от разных поставщиков,
-- пользователь может авторизироваться, регистрироваться и восстанавливать пароль через API.
-    
-2. Поставщик:
+Operational tooling includes:
 
-- через API информирует сервис об обновлении прайса,
-- может включать и отключать приём заказов,
-- может получать список оформленных заказов (с товарами из его прайса).
+- Swagger and OpenAPI schema generation through `drf-spectacular`
+- throttling on sensitive authentication endpoints
+- Sentry integration for Django and Celery, guarded by environment configuration
+- a dedicated admin-only endpoint to trigger a test exception and verify error ingestion
 
-### Задача
+### Background Tasks and Media
 
-Необходимо разработать backend-часть сервиса заказа товаров для розничных сетей на Django Rest Framework.
+Celery and Redis are used for asynchronous processing. If the broker is unavailable, the project falls back to synchronous execution for supported tasks instead of failing hard.
 
-**Базовая часть:**
-* разработка сервиса под готовую спецификацию (API),
-* возможность добавления настраиваемых полей (характеристик) товаров,
-* импорт товаров,
-* отправка накладной на email администратора (для исполнения заказа),
-* отправка заказа на email клиента (подтверждение приёма заказа).
+Asynchronous tasks currently cover:
 
-**Продвинутая часть (необязательная к выполнению, не влияет на получение зачёта):**
-* экспорт товаров,
-* админка заказов (проставление статуса заказа и уведомление клиента),
-* выделение медленных методов в отдельные асинхронные функции (email, импорт, экспорт).
+- email delivery
+- supplier price-list import
+- thumbnail generation for user avatars and product images
 
-_Обратите внимание!_
+Media processing uses `easy-thumbnails`, and the project prepares multiple aliases for user and product images.
 
-В репозитории приведён готовый пример с базовой частью проекта. Вы можете работать с проектом, выбрав один из двух вариантов:
-- разработать свою версию, исходя из текстового описания базовой части проекта,
-- взять за основу пример из репозитория, изучить его и выполнить продвинутую часть задания.
+### Caching
 
-Вы можете интерпретировать текстовое описание проекта по-своему. Работа над дипломом - это в первую очередь творческий процесс. Главное - отсутствие плагиата (не сдавать работы других студентов).
+The project uses two layers of caching:
 
-### Исходные данные для проекта
- 
-1. Общее описание сервиса
-1. [Спецификация (API) - 1 шт.](./reference/screens.md)
-1. [Файлы yaml для импорта товаров - 1 шт.](./data/shop1.yaml)
-1. [Базовый пример API Сервиса для магазина](./reference//netology_pd_diplom/) 
+- manual response caching for `/api/v1/products`
+- ORM-level query caching through `django-cachalot`
 
-## Этапы разработки
+If `CACHE_URL` is configured, Redis is used as the cache backend. Otherwise the project falls back to local in-memory cache for development.
 
-Разработку backend рекомендуется разделить на следующие этапы.
+## Technology Stack
 
-**Базовая часть:**
-1. [Создание и настройка проекта.](./reference/step-1.md)
-2. [Проработка моделей данных.](./reference/step-2.md)
-3. [Реализация импорта товаров.](./reference/step-3.md)
-4. [Реализация API views.](./reference/step-4.md)
-5. [Полностью готовый backend.](./reference/step-5.md)
+- Python 3.14
+- Django 5.2
+- Django REST Framework
+- drf-spectacular
+- Celery
+- Redis
+- social-auth-app-django
+- django-baton
+- easy-thumbnails
+- Pillow
+- sentry-sdk
+- django-cachalot
+- SQLite by default
 
-**Продвинутая часть** (выполняется по желанию, если базовая часть полностью готова):
+## Project Structure
 
-6. [Реализация forms и views админки склада.](./reference/step-6-adv.md)
-7. [Вынос медленных методов в задачи Celery.](./reference/step-7-adv.md)
-8. Создание docker-compose файла для приложения.
+```text
+backend/                 domain models, API views, serializers, admin, tasks, signals, tests
+backend/migrations/      database migrations
+netology_pd_diplom/      Django settings, root URLs, Celery bootstrap
+templates/frontend/      SPA frontend template
+templates/admin/         custom admin pages
+data/                    sample import files
+manage.py                Django entry point
+Dockerfile               container image definition
+docker-compose.yml       local service composition
+.env.example             required environment variables
+```
+
+## Main Routes
+
+### Frontend and Admin
+
+- `/` - SPA frontend
+- `/admin/` - Django Admin
+- `/admin/backend/shop/import/` - custom supplier import page
+- `/baton/` - Baton admin routes
 
+### API Documentation
 
-Разработку следует вести с использованием git (github/gitlab/bitbucket) с регулярными коммитами в репозиторий, доступный вашему дипломному руководителю. Старайтесь делать коммиты как можно чаще.
+- `/api/schema/` - OpenAPI schema
+- `/api/schema/swagger-ui/` - Swagger UI
+- `/api/schema/redoc/` - ReDoc
 
-### Этап 1. Создание и настройка проекта
+### Authentication
 
-**Критерии достижения**
+- `POST /api/v1/user/register`
+- `POST /api/v1/user/register/confirm`
+- `POST /api/v1/user/login`
+- `POST /api/v1/user/password_reset`
+- `POST /api/v1/user/password_reset/confirm`
+- `/auth/login/google-oauth2/`
+- `/auth/login/github/`
+- `/auth/token-bridge/`
 
-1. Вы имеете актуальный код данного репозитория на рабочем компьютере.
-2. У вас создан Django-проект, и он запускается без ошибок.
+### Catalog and Orders
 
-Для получения подробностей по данному этапу
-[перейдите по ссылке](./reference/step-1.md).
+- `GET /api/v1/categories`
+- `GET /api/v1/shops`
+- `GET /api/v1/products`
+- `GET /api/v1/basket`
+- `POST /api/v1/basket`
+- `PUT /api/v1/basket`
+- `DELETE /api/v1/basket`
+- `GET /api/v1/order`
+- `POST /api/v1/order`
 
-### Этап 2. Проработка моделей данных
+### Supplier API
 
-**Критерии достижения**
+- `POST /api/v1/partner/update`
+- `GET /api/v1/partner/state`
+- `POST /api/v1/partner/state`
+- `GET /api/v1/partner/orders`
 
-1. Созданы модели и их дополнительные методы.
+### Operations
 
-Для получения подробностей по данному этапу
-[перейдите по ссылке](./reference/step-2.md).
+- `GET /api/v1/debug/sentry`
 
-### Этап 3. Реализация импорта товаров
+## Environment Variables
 
-**Критерии достижения**
+Copy `.env.example` into your local environment configuration and set values as needed.
 
-1. Созданы функции загрузки товаров из приложенных файлов в модели Django.
-2. Загружены товары из всех файлов для импорта.
+Required operational variables:
 
-Для получения подробностей по данному этапу
-[перейдите по ссылке](./reference/step-3.md).
+- `DJANGO_SECRET_KEY`
+- `DJANGO_DEBUG`
+- `DJANGO_ALLOWED_HOSTS`
+- `FRONTEND_URL`
+- `ADMIN_EMAIL`
+- `EMAIL_BACKEND`
+- `CELERY_BROKER_URL`
+- `CELERY_RESULT_BACKEND`
+- `CACHE_URL`
+- `CACHALOT_TIMEOUT`
+- `SENTRY_DSN`
+- `SENTRY_ENVIRONMENT`
+- `SENTRY_TRACES_SAMPLE_RATE`
+- `SOCIAL_AUTH_GOOGLE_OAUTH2_KEY`
+- `SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET`
+- `SOCIAL_AUTH_GITHUB_KEY`
+- `SOCIAL_AUTH_GITHUB_SECRET`
 
-### Этап 4. Реализация APIViews
+If Sentry DSN or OAuth credentials are missing, the project still starts. The related integrations simply remain inactive or incomplete until valid credentials are provided.
 
-**Критерии достижения**
+## Local Run
 
-1. Реализованы API Views для основных [страниц](./reference/screens.md) сервиса (без админки):
-   - Авторизация
-   - Регистрация
-   - Получение списка товаров
-   - Получение спецификации по отдельному товару в базе данных
-   - Работа с корзиной (добавление, удаление товаров)
-   - Добавление/удаление адреса доставки
-   - Подтверждение заказа
-   - Отправка email c подтверждением
-   - Получение  списка заказов
-   - Получение деталей заказа
-   - Редактирование статуса заказа
+### Windows without venv activation
 
-Для получения подробностей по данному этапу
-[перейдите по ссылке](./reference/step-4.md).
+```powershell
+cd D:\net0ology\diplom
+.\venv\Scripts\python.exe -m pip install -r requirements.txt
+.\venv\Scripts\python.exe manage.py migrate
+.\venv\Scripts\python.exe manage.py runserver
+```
 
-### Этап 5. Полностью готовый backend
+### Windows with activated venv
 
-**Критерии достижения**
+If PowerShell blocks `Activate.ps1`, allow it for the current shell session:
 
-1. Полностью работающие API Endpoint'ы
-2. Корректно отрабатывает следующий сценарий:
-   - пользователь может авторизироваться,
-   - есть возможность отправки данных для регистрации и получения email с подтверждением регистрации,
-   - пользователь может добавлять в корзину товары от разных магазинов,
-   - пользователь может подтверждать заказ с вводом адреса доставки,
-   - пользователь получает email с подтверждением после ввода адреса доставки,
-   - пользователь может переходить на страницу «‎Заказы» и открывать созданный заказ.
+```powershell
+Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
+.\venv\Scripts\Activate.ps1
+pip install -r requirements.txt
+python manage.py migrate
+python manage.py runserver
+```
 
-Для получения подробностей по данному этапу
-[перейдите по ссылке](./reference/step-5.md).
+### Celery Worker
 
-## Полезные материалы
+```powershell
+.\venv\Scripts\python.exe -m celery -A netology_pd_diplom worker -l info
+```
 
-1. [Информация о сервисе](./reference/service.md)
-2. [Спецификация API](./reference/api.md)
-3. [Описание страниц сервиса](./reference/screens.md)
+### Redis
 
----
+Redis is required for production-style Celery and cache execution. For local development without Redis, some flows still work thanks to graceful fallbacks, but Celery queueing and Redis-backed caching will not be active.
 
-## Продвинутая часть (выполняется по желанию, не влияет на получение зачёта)
+## Docker
 
-Обязательное условие: базовая часть проекта полностью готова.
+```powershell
+docker compose up --build
+```
 
-### Этап 6. Реализация API views админки склада
+Services:
 
-**Критерии достижения**
+- `web` - Django application
+- `redis` - Redis broker and cache
+- `celery` - background worker
 
-1. Реализованы API views для [страниц админки](./reference/screens.md) сервиса.
+Stop services:
 
-Для получения подробностей по данному этапу
-[перейдите по ссылке](reference/step-6-adv.md).
+```powershell
+docker compose down
+```
 
-### Этап 7. Вынос медленных методов в задачи Celery
+## Media and Thumbnails
 
-**Критерии достижения**
+The application stores uploaded media under `MEDIA_ROOT`. Thumbnail aliases configured in settings:
 
-1. Создано Celery-приложение c методами:
-   - send_email,
-   - do_import.
-2. Создан view для запуска Celery-задачи do_import из админки.
+- `avatar_small`
+- `avatar_medium`
+- `product_small`
+- `product_medium`
 
-Для получения подробностей по данному этапу
-[перейдите по ссылке](reference/step-7-adv.md).  
+Thumbnails are generated asynchronously after saving user avatars and product images.
 
-### Этап 8. Создание docker-compose файла для приложения
-1. Создать docker-compose файл для сборки приложения.
-2. Предоставить инструкцию для сборки docker-образа.
+## Monitoring and Verification
 
-_Важно: не нарушайте дедлайн сдачи, возникающие вопросы задавайте в чате с дипломным руководителем._
+If `SENTRY_DSN` is configured, Sentry is initialized for both Django and Celery. To verify the integration:
 
------
+1. Log in as an admin user.
+2. Open `/api/v1/debug/sentry`.
+3. Confirm the forced exception appears in Sentry.
 
-## Правила приёма дипломной работы
+This endpoint is intentionally restricted to admins.
 
-1. Проект разместить в GitHub. Ссылка на дипломную работу должна оставаться неизменной, чтобы дипломный руководитель мог видеть ваш прогресс.
-2. Сдавать финальный вариант дипломной работы в личном кабинете Нетологии.
+## Throttling
 
------
+Configured throttling scopes:
 
-## Критерии оценки
+- `login`: `5/minute`
+- `register`: `3/minute`
+- `confirm`: `5/minute`
 
-Зачёт по дипломной работе можно получить, если работа соответствует критериям:
+The project includes an automated test that verifies the login endpoint returns HTTP `429` after exceeding the configured rate.
 
-* работоспособный проект в репозитории с документацией по запуску,
-* выполненная базовая часть проекта,
-* наличие собственных комментариев к коду,
-* использование сторонних библиотек и фреймворков.
+## Testing
+
+System check:
+
+```powershell
+.\venv\Scripts\python.exe manage.py check
+```
+
+Run test suite:
+
+```powershell
+.\venv\Scripts\python.exe manage.py test backend.tests
+```
+
+Generate and validate OpenAPI schema:
+
+```powershell
+.\venv\Scripts\python.exe manage.py spectacular --file schema.yml --validate
+```
+
+## Demo Credentials
+
+If your local database already contains demonstration records, these credentials may be available:
+
+- admin: `admin@admin.com` / `AdminPass123!`
+- supplier: `supplier@demo.local` / `DemoPass123!`
+- buyer: `buyer@demo.local` / `DemoPass123!`
+
+If the admin password is unknown:
+
+```powershell
+.\venv\Scripts\python.exe manage.py changepassword admin@admin.com
+```
+
+## Security and Reliability Notes
+
+The project includes several defensive improvements:
+
+- remote YAML import uses `requests.get(..., timeout=10)`
+- import responses are validated with `raise_for_status()`
+- YAML from external sources is parsed with `safe_load`
+- Celery task dispatch falls back to synchronous execution when the broker is unavailable
+- sensitive auth endpoints are throttled
+- operational secrets and third-party credentials are moved to environment variables
+
+## Change Log
+
+### 2026-04-09
+
+- moved runtime configuration to environment variables and added `.env.example`
+- pinned project dependencies in `requirements.txt`
+- connected Google and GitHub social authentication through `social-auth-app-django`
+- added a local token bridge to return OAuth-authenticated users back into the SPA token flow
+- enabled Baton and restyled the admin area under the VoN brand
+- added media fields for user avatars and product images
+- configured thumbnail aliases and asynchronous thumbnail warmup
+- integrated Sentry initialization for Django and Celery
+- enabled `django-cachalot` alongside existing manual product-response caching
+- expanded automated tests for social auth, admin access, cache behavior, media signals, and Sentry debug endpoint
+
+### 2026-04-03
+
+- redesigned the frontend interface and renamed the product to VoN
+- connected OpenAPI generation and Swagger UI
+- added DRF throttling for authentication endpoints
+- improved APIView documentation for Swagger and developer onboarding
+
+### 2026-04-02
+
+- hardened supplier import by adding timeout, status validation, and safe YAML loading
+- improved import fallback behavior when Celery broker is unavailable
+- updated admin-side supplier import workflow
