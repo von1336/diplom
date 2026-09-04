@@ -1,80 +1,80 @@
 # VoN
 
-VoN is a Django-based B2B procurement platform built for buyers, suppliers, and administrators. The project combines a REST API, a browser-based SPA frontend, Django Admin, background task processing with Celery, and a set of operational integrations that make the diploma project look and behave closer to a commercial system than a учебный шаблон.
+VoN — корпоративная B2B-платформа закупок на базе Django для покупателей, поставщиков и администраторов. Проект объединяет REST API, браузерный SPA-интерфейс, панель управления Django Admin, асинхронную обработку фоновых задач в Celery и набор интеграций корпоративного уровня.
 
-The system is API-first, but it also includes a ready-to-run UI at the root route `/` and a production-style admin panel for operational workflows.
+Система построена по принципу API-first, но также включает готовый к работе пользовательский интерфейс по корневому маршруту `/` и панель администратора для операционной работы.
 
-## Core Functional Areas
+## Основные функциональные области
 
-### Authentication and Accounts
+### Аутентификация и управление аккаунтами
 
-The platform supports multiple authentication flows:
+Платформа поддерживает несколько сценариев аутентификации:
 
-- local registration with email confirmation token
-- token-based login for API access
-- password reset via `django-rest-passwordreset`
-- social login through Google and GitHub
-- DRF token bridge after successful OAuth login, so the frontend continues to work with the same token auth scheme as the REST API
+- локальная регистрация с подтверждением через email-токен;
+- токен-авторизация для доступа к REST API;
+- сброс пароля через `django-rest-passwordreset`;
+- вход через социальные сервисы Google и GitHub;
+- локальный мост токенов DRF после успешного OAuth-входа, благодаря чему фронтенд работает по единой схеме авторизации REST API.
 
-New social-auth users are treated as verified users and activated on first successful OAuth callback. Existing local accounts can be associated by email through the social-auth pipeline.
+Пользователи, вошедшие через социальные сети, считаются верифицированными и автоматически активируются при первом успешном ответе OAuth. Существующие локальные аккаунты связываются по адресу электронной почты.
 
-### Catalog and Ordering
+### Каталог и оформление заказов
 
-Buyers can:
+Покупатели могут:
 
-- browse categories, shops, and product offers
-- filter catalog data by shop and category
-- add items to basket
-- update basket quantities and remove positions
-- create an order from basket with a delivery contact
-- view completed orders and their statuses
+- просматривать категории, магазины и товарные предложения;
+- фильтровать каталог по конкретному магазину и категории;
+- добавлять позиции в корзину;
+- изменять количество товаров в корзине и удалять позиции;
+- оформлять заказ из корзины с указанием контактных данных доставки;
+- отслеживать созданные заказы и их текущие статусы.
 
-Suppliers can:
+Поставщики могут:
 
-- import goods from a remote YAML price list
-- enable or disable order intake
-- view supplier-specific orders
+- импортировать номенклатуру товаров из удалённого прайс-листа в формате YAML;
+- включать или отключать приём заказов;
+- просматривать заказы, относящиеся к их магазину.
 
-### Admin and Operations
+### Администрирование и операционная деятельность
 
-The admin panel is enhanced beyond the default Django setup:
+Панель администратора расширена относительно стандартной поставки Django:
 
-- Baton theme is enabled for improved navigation and presentation
-- suppliers can import a price list through a dedicated admin page
-- user avatars and product images are visible in admin previews
-- search fields and list filters are tuned for day-to-day operations
+- подключена тема Baton для удобной навигации и интерфейса;
+- поставщики могут импортировать прайс-листы через специальную страницу в админке;
+- аватары пользователей и изображения товаров отображаются в виде миниатюр в списках;
+- поля поиска и фильтрации оптимизированы для повседневной работы операторов.
 
-Operational tooling includes:
+Инструменты эксплуатации:
 
-- Swagger and OpenAPI schema generation through `drf-spectacular`
-- throttling on sensitive authentication endpoints
-- Sentry integration for Django and Celery, guarded by environment configuration
-- a dedicated admin-only endpoint to trigger a test exception and verify error ingestion
+- генерация схем OpenAPI и Swagger UI через `drf-spectacular`;
+- троттлинг и ограничение частоты запросов на чувствительных эндпоинтах авторизации;
+- интеграция с Sentry для мониторинга ошибок Django и задач Celery;
+- специальный эндпоинт для администраторов для проверки доставки ошибок в Sentry.
 
-### Background Tasks and Media
+### Фоновые задачи и медиафайлы
 
-Celery and Redis are used for asynchronous processing. If the broker is unavailable, the project falls back to synchronous execution for supported tasks instead of failing hard.
+Celery и Redis используются для асинхронной обработки. При недоступности брокера сообщений система автоматически переключается на синхронное выполнение задач с сохранением работоспособности.
 
-Asynchronous tasks currently cover:
+Фоновые задачи включают:
 
-- email delivery
-- supplier price-list import
-- thumbnail generation for user avatars and product images
+- доставку почтовых уведомлений;
+- импорт прайс-листов поставщиков;
+- генерацию миниатюр для аватаров пользователей и фотографий товаров.
 
-Media processing uses `easy-thumbnails`, and the project prepares multiple aliases for user and product images.
+Обработка изображений построена на `easy-thumbnails` с преднастроенными профилями масштабирования.
 
-### Caching
+### Кэширование
 
-The project uses two layers of caching:
+В проекте реализовано два уровня кэширования:
 
-- manual response caching for `/api/v1/products`
-- ORM-level query caching through `django-cachalot`
+- кэширование ответов эндпоинта `/api/v1/products`;
+- кэширование ORM-запросов к базе данных через `django-cachalot`.
 
-If `CACHE_URL` is configured, Redis is used as the cache backend. Otherwise the project falls back to local in-memory cache for development.
+При указании переменной `CACHE_URL` в качестве бэкенда кэша используется Redis, в противном случае для локальной разработки используется in-memory кэш.
 
-## Technology Stack
+## Стек технологий
 
-- Python 3.14
+- Python 3.10+
 - Django 5.2
 - Django REST Framework
 - drf-spectacular
@@ -86,39 +86,39 @@ If `CACHE_URL` is configured, Redis is used as the cache backend. Otherwise the 
 - Pillow
 - sentry-sdk
 - django-cachalot
-- SQLite by default
+- PostgreSQL / SQLite
 
-## Project Structure
+## Структура проекта
 
 ```text
-backend/                 domain models, API views, serializers, admin, tasks, signals, tests
-backend/migrations/      database migrations
-netology_pd_diplom/      Django settings, root URLs, Celery bootstrap
-templates/frontend/      SPA frontend template
-templates/admin/         custom admin pages
-data/                    sample import files
-manage.py                Django entry point
-Dockerfile               container image definition
-docker-compose.yml       local service composition
-.env.example             required environment variables
+backend/                 бизнес-модели, API-контроллеры, сериализаторы, админка, задачи, сигналы, тесты
+backend/migrations/      миграции базы данных
+netology_pd_diplom/      настройки Django, корневой роутер URL, инициализация Celery
+templates/frontend/      шаблоны SPA-интерфейса
+templates/admin/         кастомные страницы панели администратора
+data/                    примеры файлов импорта
+manage.py                точка входа Django
+Dockerfile               конфигурация сборки Docker-образа
+docker-compose.yml       локальная композиция сервисов
+.env.example             переменные окружения
 ```
 
-## Main Routes
+## Основные маршруты
 
-### Frontend and Admin
+### Пользовательский интерфейс и админка
 
-- `/` - SPA frontend
-- `/admin/` - Django Admin
-- `/admin/backend/shop/import/` - custom supplier import page
-- `/baton/` - Baton admin routes
+- `/` — веб-интерфейс SPA
+- `/admin/` — панель управления Django Admin
+- `/admin/backend/shop/import/` — страница импорта прайс-листа поставщика
+- `/baton/` — служебные маршруты темы Baton
 
-### API Documentation
+### Документация API
 
-- `/api/schema/` - OpenAPI schema
-- `/api/schema/swagger-ui/` - Swagger UI
-- `/api/schema/redoc/` - ReDoc
+- `/api/schema/` — схема OpenAPI
+- `/api/schema/swagger-ui/` — интерактивная документация Swagger UI
+- `/api/schema/redoc/` — документация ReDoc
 
-### Authentication
+### Аутентификация
 
 - `POST /api/v1/user/register`
 - `POST /api/v1/user/register/confirm`
@@ -129,7 +129,7 @@ docker-compose.yml       local service composition
 - `/auth/login/github/`
 - `/auth/token-bridge/`
 
-### Catalog and Orders
+### Каталог и заказы
 
 - `GET /api/v1/categories`
 - `GET /api/v1/shops`
@@ -141,22 +141,20 @@ docker-compose.yml       local service composition
 - `GET /api/v1/order`
 - `POST /api/v1/order`
 
-### Supplier API
+### API поставщиков
 
 - `POST /api/v1/partner/update`
 - `GET /api/v1/partner/state`
 - `POST /api/v1/partner/state`
 - `GET /api/v1/partner/orders`
 
-### Operations
+### Диагностика
 
 - `GET /api/v1/debug/sentry`
 
-## Environment Variables
+## Переменные окружения
 
-Copy `.env.example` into your local environment configuration and set values as needed.
-
-Required operational variables:
+Скопируйте `.env.example` в локальный `.env` и настройте параметры:
 
 - `DJANGO_SECRET_KEY`
 - `DJANGO_DEBUG`
@@ -176,159 +174,96 @@ Required operational variables:
 - `SOCIAL_AUTH_GITHUB_KEY`
 - `SOCIAL_AUTH_GITHUB_SECRET`
 
-If Sentry DSN or OAuth credentials are missing, the project still starts. The related integrations simply remain inactive or incomplete until valid credentials are provided.
+При отсутствии ключей Sentry или OAuth приложение запускается в штатном режиме, а соответствующие внешние интеграции остаются неактивными до указания учётных данных.
 
-## Local Run
+## Локальный запуск
 
-### Windows without venv activation
-
-```powershell
-cd D:\net0ology\diplom
-.\venv\Scripts\python.exe -m pip install -r requirements.txt
-.\venv\Scripts\python.exe manage.py migrate
-.\venv\Scripts\python.exe manage.py runserver
-```
-
-### Windows with activated venv
-
-If PowerShell blocks `Activate.ps1`, allow it for the current shell session:
+### Запуск в виртуальном окружении
 
 ```powershell
-Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
-.\venv\Scripts\Activate.ps1
+python -m venv venv
+venv\Scripts\activate
 pip install -r requirements.txt
 python manage.py migrate
 python manage.py runserver
 ```
 
-### Celery Worker
+### Фоновый воркер Celery
 
 ```powershell
-.\venv\Scripts\python.exe -m celery -A netology_pd_diplom worker -l info
+celery -A netology_pd_diplom worker -l info
 ```
 
 ### Redis
 
-Redis is required for production-style Celery and cache execution. For local development without Redis, some flows still work thanks to graceful fallbacks, but Celery queueing and Redis-backed caching will not be active.
+Redis необходим для полноценной работы очередей Celery и кэширования. Для локальной разработки без Redis система задействует синхронный fallback.
 
-## Docker
+## Запуск в Docker Compose
 
 ```powershell
 docker compose up --build
 ```
 
-Services:
+Сервисы:
+- `web` — приложение Django
+- `redis` — брокер сообщений и кэш
+- `celery` — фоновый обработчик задач
 
-- `web` - Django application
-- `redis` - Redis broker and cache
-- `celery` - background worker
-
-Stop services:
-
+Остановка сервисов:
 ```powershell
 docker compose down
 ```
 
-## Media and Thumbnails
+## Медиафайлы и миниатюры
 
-The application stores uploaded media under `MEDIA_ROOT`. Thumbnail aliases configured in settings:
-
+Приложение сохраняет медиафайлы в каталоге `MEDIA_ROOT`. Настроены профили миниатюр:
 - `avatar_small`
 - `avatar_medium`
 - `product_small`
 - `product_medium`
 
-Thumbnails are generated asynchronously after saving user avatars and product images.
+Миниатюры формируются асинхронно после сохранения аватаров пользователей и фотографий товаров.
 
-## Monitoring and Verification
+## Мониторинг и проверка Sentry
 
-If `SENTRY_DSN` is configured, Sentry is initialized for both Django and Celery. To verify the integration:
+При наличии `SENTRY_DSN` система инициализирует клиент для Django и Celery. Для проверки:
+1. Войдите под учётной записью администратора.
+2. Перейдите по адресу `/api/v1/debug/sentry`.
+3. Убедитесь, что тестовое исключение зарегистрировано в консоли Sentry.
 
-1. Log in as an admin user.
-2. Open `/api/v1/debug/sentry`.
-3. Confirm the forced exception appears in Sentry.
+Эндпоинт доступен исключительно администраторам платформы.
 
-This endpoint is intentionally restricted to admins.
+## Ограничение частоты запросов (Throttling)
 
-## Throttling
+Настроены лимиты:
+- `login`: 5 запросов в минуту
+- `register`: 3 запроса в минуту
+- `confirm`: 5 запросов в минуту
 
-Configured throttling scopes:
+Реализован тест, проверяющий возврат HTTP 429 при превышении заданного порога.
 
-- `login`: `5/minute`
-- `register`: `3/minute`
-- `confirm`: `5/minute`
+## Тестирование
 
-The project includes an automated test that verifies the login endpoint returns HTTP `429` after exceeding the configured rate.
-
-## Testing
-
-System check:
-
+Проверка конфигурации Django:
 ```powershell
-.\venv\Scripts\python.exe manage.py check
+python manage.py check
 ```
 
-Run test suite:
-
+Запуск набора тестов:
 ```powershell
-.\venv\Scripts\python.exe manage.py test backend.tests
+python manage.py test backend.tests
 ```
 
-Generate and validate OpenAPI schema:
-
+Генерация и валидация схемы OpenAPI:
 ```powershell
-.\venv\Scripts\python.exe manage.py spectacular --file schema.yml --validate
+python manage.py spectacular --file schema.yml --validate
 ```
 
-## Demo Credentials
+## Безопасность и надёжность
 
-If your local database already contains demonstration records, these credentials may be available:
-
-- admin: `admin@admin.com` / `AdminPass123!`
-- supplier: `supplier@demo.local` / `DemoPass123!`
-- buyer: `buyer@demo.local` / `DemoPass123!`
-
-If the admin password is unknown:
-
-```powershell
-.\venv\Scripts\python.exe manage.py changepassword admin@admin.com
-```
-
-## Security and Reliability Notes
-
-The project includes several defensive improvements:
-
-- remote YAML import uses `requests.get(..., timeout=10)`
-- import responses are validated with `raise_for_status()`
-- YAML from external sources is parsed with `safe_load`
-- Celery task dispatch falls back to synchronous execution when the broker is unavailable
-- sensitive auth endpoints are throttled
-- operational secrets and third-party credentials are moved to environment variables
-
-## Change Log
-
-### 2026-04-09
-
-- moved runtime configuration to environment variables and added `.env.example`
-- pinned project dependencies in `requirements.txt`
-- connected Google and GitHub social authentication through `social-auth-app-django`
-- added a local token bridge to return OAuth-authenticated users back into the SPA token flow
-- enabled Baton and restyled the admin area under the VoN brand
-- added media fields for user avatars and product images
-- configured thumbnail aliases and asynchronous thumbnail warmup
-- integrated Sentry initialization for Django and Celery
-- enabled `django-cachalot` alongside existing manual product-response caching
-- expanded automated tests for social auth, admin access, cache behavior, media signals, and Sentry debug endpoint
-
-### 2026-04-03
-
-- redesigned the frontend interface and renamed the product to VoN
-- connected OpenAPI generation and Swagger UI
-- added DRF throttling for authentication endpoints
-- improved APIView documentation for Swagger and developer onboarding
-
-### 2026-04-02
-
-- hardened supplier import by adding timeout, status validation, and safe YAML loading
-- improved import fallback behavior when Celery broker is unavailable
-- updated admin-side supplier import workflow
+- Импорт внешних YAML-файлов защищён таймаутом `requests.get(..., timeout=10)`.
+- Ответы сервера валидируются через `raise_for_status()`.
+- Внешний YAML парсится безопасным методом `safe_load`.
+- Отправка задач в Celery защищена синхронным fallback при недоступности брокера.
+- Чувствительные эндпоинты защищены троттлингом.
+- Все ключи и пароли вынесены в переменные окружения.
